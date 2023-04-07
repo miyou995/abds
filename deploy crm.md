@@ -218,7 +218,7 @@ sudo ufw status
 sudo ufw allow 'Nginx Full'
 sudo ufw delete allow 'Nginx HTTP'
 
-sudo certbot --nginx -d crm.octopus-consulting.com -d www.crm.octopus-consulting.com
+sudo certbot --nginx -d abdoptic.com -d www.abdoptic.com
 
 sudo systemctl status certbot.timer
 sudo certbot renew --dry-run
