@@ -1,0 +1,12 @@
+<tr>
+    <td>{{glass.eye_choice}}</td>
+    <td>{{glass.spher}}</td>
+    {% if glass.spheric_glass %}
+        <td style="text-align:right">-</td>
+        <td style="text-align:center">-</td>
+    {% else %}
+        <td style="text-align:right">{{glass.cyl}}</td>
+        <td style="text-align:center">{{glass.axe}}</td>
+    {% endif %}
+    <td style="text-align:center">{{glass.get_type_de_verre}}</td>
+</tr>

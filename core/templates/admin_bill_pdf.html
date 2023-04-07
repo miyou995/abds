@@ -1,0 +1,285 @@
+{% load static %}
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'PT Sans', sans-serif;
+        }
+
+        @page {
+            size: 2.8in 11in;
+            margin-top: 0cm;
+            margin-left: 0cm;
+            margin-right: 0cm;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        tr {
+            width: 100%;
+
+        }
+
+        h1 {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        {% comment %} #logo {
+            width: 60%;
+            text-align: center;
+            -webkit-align-content: center;
+            align-content: center;
+            padding: 5px;
+            margin: 2px;
+            display: block;
+            margin: 0 auto;
+        } {% endcomment %}
+
+        header {
+            width: 100%;
+            text-align: center;
+            -webkit-align-content: center;
+            align-content: center;
+            vertical-align: middle;
+        }
+
+        .items thead {
+            text-align: center;
+        }
+
+        .center-align {
+            text-align: center;
+        }
+
+        .bill-details td {
+            font-size: 12px;
+        }
+
+        .receipt {
+            font-size: medium;
+        }
+
+        .items .heading {
+            font-size: 12.5px;
+            text-transform: uppercase;
+            border-top:1px solid black;
+            margin-bottom: 4px;
+            border-bottom: 1px solid black;
+            vertical-align: middle;
+        }
+
+        .items thead tr th:first-child,
+        .items tbody tr td:first-child {
+            width: 13%;
+            min-width: 13%;
+            max-width: 13%;
+            word-break: break-all;
+            text-align: left;
+        }
+
+        .items td {
+            width: 21%;
+
+            font-size: 12px;
+            text-align: right;
+            vertical-align: bottom;
+        }
+
+     
+
+        .sum-up {
+            text-align: right !important;
+        }
+        .total {
+            font-size: 13px;
+            border-top:1px dashed black !important;
+            border-bottom:1px dashed black !important;
+        }
+        .total.text, .total.price {
+            text-align: right;
+        }
+        .line {
+            border-top:1px solid black !important;
+        }
+        .heading.rate {
+            width: 20%;
+        }
+        .heading.amount {
+            width: 25%;
+        }
+        .heading.qty {
+            width: 5%
+        }
+        p {
+            padding: 1px;
+            margin: 0;
+        }
+        section, footer {
+            font-size: 12px;
+        }
+        .pending {
+          display: block;
+          position: relative;
+          color: #184d47;
+          border: 4px solid #184d47;
+          text-transform: uppercase;
+          font-weight: bold;
+          font-size: 12px;
+          padding: 4px 12px 0px;
+          float: right;
+          top: 20px;
+          transform: rotate(-15deg);
+        }
+      
+    </style>
+</head>
+
+<body>
+    <header>
+        <div id="logo" class="media" data-src="logo.png" src="./logo.png"></div>
+
+    </header>
+    <p>{{business.name}}</p>
+    <p>{{business.adress}}</p>
+
+    <p>Téléphone : {{order.get_client_phone}}</p>
+    <table class="bill-details">
+        <tbody>
+            <tr>
+                <td>Nom : <span>{{order.client.name}}</span></td>
+            </tr>
+            <tr>
+                <td>Date #: <span>{{order.updated}}</span></td>
+            </tr>
+            <tr>
+                <th class="center-align" colspan="2"><span class="receipt">Reçu De Paiement</span></th>
+            </tr>
+        </tbody>
+    </table>
+    <table class="items">
+        {% if de_loins %}
+            <thead>
+                {% include 'component/admin_bill_line_header.html' with vision="VL" %}
+            </thead>
+        <tbody>
+            {% for glass in de_loins %}
+                {% include 'component/admin_bill_line_body.html' %}
+            {% endfor %}
+        {% endif %}
+          
+       </tbody>
+   </table>
+    <table class="items">
+        {% if de_pres %}
+        <thead>
+            {% include 'component/admin_bill_line_header.html' with vision="VP" %}
+       </thead>
+       <tbody>
+           
+           {% for glass in de_pres %}
+                {% include 'component/admin_bill_line_body.html' %}
+           {% endfor %}
+    {% endif %}
+    {% if progressifs_de_loin %}
+        <thead>
+            <tr><th colspan="5" class="heading name" style="text-align:center">Progressif</th></tr>
+            {% include 'component/admin_bill_line_header.html' with vision="VL" %}
+        </thead>
+        <tbody>
+        {% for glass in progressifs_de_loin %}
+            {% include 'component/admin_bill_line_body.html' %}
+        {% endfor %}
+        {% for glass in progressifs_de_loin %}
+            {% if forloop.counter0 == 0 %}
+                <tr><td colspan="5">ADD: {{glass.addition}}</td></tr>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    {% if progressifs_de_pres %}
+        <thead>
+            {% include 'component/admin_bill_line_header.html' with vision="VP" %}
+        </thead>
+        <tbody>
+        {% for glass in progressifs_de_pres %}
+            {% include 'component/admin_bill_line_body.html' %}
+        {% endfor %}
+    {% endif %}
+    {% if lentilles %}
+        <thead>
+            <tr><th colspan="6" class="heading name" style="text-align:center">Lentilles</th></tr>
+            <tr>
+                <th class="heading name"></th>
+                <th class="heading qty">SPH</th>
+                    <th class="heading rate" style="text-align:right">CYL</th>
+                    <th class="heading amount">AXE</th>
+                <th class="heading amount">RAY</th>
+                <th class="heading amount">DIA</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for glass in lentilles %}
+        <tr>
+            <td>{{glass.eye_choice}}</td>
+            <td>{{glass.spher}}</td>
+            {% if glass.spheric_glass %}
+                <td style="text-align:right">-</td>
+                <td style="text-align:center">-</td>
+            {% else %}
+                <td style="text-align:right">{{glass.cyl}}</td>
+                <td style="text-align:center">{{glass.axe}}</td>
+            {% endif %}
+            <td style="text-align:center">{{glass.rayon}}</td>
+            <td style="text-align:center">{{glass.diametre}}</td>
+        </tr>
+        {% endfor %}
+        {% for glass in lentilles %}
+        {% if forloop.counter0 == 0 %}
+            <tr><td colspan="5">Type: {{glass.lentil_type}}</td></tr>
+            <tr><td colspan="5">Marque: {{glass.brand}}</td></tr>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+           <tr>
+               <td colspan="3" class="sum-up line">Prix</td>
+               <td class="line price" style="padding-right:5px">{{order.total}} DA</td>
+           </tr>
+           <tr>
+               <td colspan="3" class="sum-up">Versement</td>
+               <td class="price">{{order.versement}} DA</td>
+           </tr>
+           <tr>
+               <th colspan="3" class="total text">Reste a payer</th>
+               <th class="total price">{{order.get_reste}} DA</th>
+           </tr>
+       </tbody>
+   </table>
+    <section>
+        {% if order.emergency %}
+        <tr>
+            <th colspan="2" class="total text" style="float:right;">Commande Urgente</th>
+        </tr>
+        {% endif %}
+        {% if order.get_not_paid %}
+            <span class="pending">Non payée</span>
+        {% endif %}
+        
+        {% if order.ordonnance_return %}
+          <h4>Ordonnance Rendue</h4>
+        {% endif %}
+      
+    </section>
+    <footer style="text-align:center, margin-top:5px">
+        <h2>N°: {{order.id}}</h2>
+    </footer>
+</body>
+
+</html>
