@@ -138,3 +138,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass
