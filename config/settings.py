@@ -119,7 +119,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-SITE_ID = 1
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -134,9 +134,38 @@ MEDIA_URL = "/media/"
 STATIC_URL = "/static/"
 
 STATIC_ROOT = BASE_DIR / "assets"
-
+SITE_ID = 1
 STATICFILES_DIRS = [BASE_DIR / "static"]
-
+LOGGING ={
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(name)-12s %(levelname)-8s %(message)s'
+        },
+        'file': {
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'file',
+            'filename': BASE_DIR / "debug.log"
+        }
+    },
+    'loggers': {
+        '': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
+        }
+    }
+}
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -144,6 +173,11 @@ STORAGES = {
 }
 MEDIA_ROOT = BASE_DIR / "media"
 
+INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
+]
 
 try:
     from .local_settings import *
