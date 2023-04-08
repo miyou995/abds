@@ -101,7 +101,7 @@ class GlassDeLoin(models.Model):
     cyl          = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     axe          = models.IntegerField(default=0)
     type_de_verre= models.ForeignKey(GlassType, verbose_name=" Type de verre", on_delete=models.CASCADE)
-    addition     = models.DecimalField(verbose_name="Addition",max_digits=10, decimal_places=2)
+    addition     = models.DecimalField(verbose_name="Addition",max_digits=10, decimal_places=2, blank=True, null=True)
     note         = models.CharField( max_length=150, blank=True, null=True)
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated      = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)

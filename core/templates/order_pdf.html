@@ -173,7 +173,9 @@
                 <th class="heading amount">Amount</th>
             </tr>
         </thead> {% endcomment %}
-        <tr><th colspan="4" class="heading name" style="text-align:center">Lentilles</th></tr>
+        {% if order.lentilles.all %}
+            <tr><th colspan="4" class="heading name" style="text-align:center">Lentilles</th></tr>
+        {% endif %}
         <tbody >
             {% comment %} <tr>
                 <td>Chocolate milkshake frappe</td>
