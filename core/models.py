@@ -91,7 +91,9 @@ class GlassDePres(models.Model):
 
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated      = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
-
+    @property
+    def get_type_de_verre(self):
+        return self.type_de_verre or "-"
 class GlassDeLoin(models.Model):
     order        = models.ForeignKey(Order, related_name="de_loin_glasses", on_delete=models.CASCADE)
     eye_choice   = models.CharField(verbose_name="OEUIL",choices=EYE_CHOICES, max_length=2)
@@ -105,7 +107,9 @@ class GlassDeLoin(models.Model):
     note         = models.CharField( max_length=150, blank=True, null=True)
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated      = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
-
+    @property
+    def get_type_de_verre(self):
+        return self.type_de_verre or "-"
 
 class ProgressifDeLoin(models.Model):
     order      = models.ForeignKey(Order, related_name="de_loin_progressifs", on_delete=models.CASCADE)
