@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GlassType, Client, GlassDePres, GlassDeLoin, ProgressifDeLoin, ProgressifDePres, Order, LentilType, Lentil, PhotoClient, Menture
+from .models import GlassType, Client, GlassDePres, GlassDeLoin, ProgressifDeLoin, ProgressifDePres, Order, LentilType, Lentil, PhotoClient, Menture, SaleSummary
 from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -159,7 +159,7 @@ class OrderAdmin(admin.ModelAdmin):
             return qs.none()
     list_display = ('id', 'client',  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
     autocomplete_fields = ['client',]
-
+    exclude = ('number',)
     list_display_links = ('id','client', )
     search_fields = ('id', 'client__name')
     list_filter = ('ordonnance_return', 'client__magasin','date','paid', HasReste, HasProgressif, HasLentilles)
@@ -190,6 +190,76 @@ class ClientAdmin(admin.ModelAdmin):
     search_fields = ('id', 'name', 'phone',)
     save_as = True
     inlines=[OrderInline]
+
+
+import datetime
+from django.db.models import Sum
+
+@admin.register(SaleSummary)
+class SaleSummaryAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/sale_summary_change_list.html'
+    date_hierarchy = 'created'
+
+    def get_order_qs(self, request):
+        today = datetime.date.today()
+        return Order.objects.filter(created__date=today)
+
+    def get_spher_qs(self, request):
+        orders = self.get_order_qs(request)
+        return GlassDePres.objects.filter(order__in=orders).distinct()
+
+    def get_sales_data(self, request):
+        orders = self.get_order_qs(request)
+        spher_values = self.get_spher_qs(request)
+        type_de_verre_values = GlassType.objects.filter(depres_types_glass__order__in=orders).distinct()
+
+        sales_data = {}
+
+        for spher in spher_values:
+            spher_sales_data = {}
+            for type_de_verre in type_de_verre_values:
+                sales = GlassDePres.objects.filter(order__in=orders, spher=spher, type_de_verre=type_de_verre)
+                total_sales = sales.aggregate(total_sales=Sum('order__versement'))['total_sales'] or 0
+                spher_sales_data[type_de_verre.name] = total_sales
+            sales_data[spher] = spher_sales_data
+
+        return sales_data, spher_values, type_de_verre_values
+    
+    def changelist_view(self, request, extra_context=None):
+        sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
+
+        context = {
+            'spher_values': spher_values,
+            'type_de_verre_values': type_de_verre_values,
+            'sales_data': sales_data,
+        }
+
+        return super().changelist_view(request, extra_context=context)
+
+
+
+    # def changelist_view(self, request, extra_context=None):
+    #     response = super().changelist_view(
+    #         request,
+    #         extra_context=extra_context,
+    #     )
+    #     try:
+    #         qs = response.context_data['cl'].queryset
+    #         print('THE QS', qs)
+    #     except (AttributeError, KeyError):
+    #         return response
+
+    #     metrics = {
+    #         'total': "23",
+    #         'total_sales': "65000",
+    #     }
+
+    #     response.context_data['summary'] = qs.values('de_pres_glasses__type_de_verre').order_by('-created')
+    #     print('response.context_dat', response.context_data['summary'])
+    #     return response
+
+
+
 
 
 admin.site.register(Client, ClientAdmin)
