@@ -157,6 +157,8 @@ class OrderAdmin(admin.ModelAdmin):
             return qs
         else:
             return qs.none()
+    save_on_top = True
+        
     list_display = ('id', 'client',  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
     autocomplete_fields = ['client',]
     exclude = ('number',)
@@ -194,46 +196,46 @@ class ClientAdmin(admin.ModelAdmin):
 
 import datetime
 from django.db.models import Sum
-
+from django.db.models import Count
 @admin.register(SaleSummary)
 class SaleSummaryAdmin(admin.ModelAdmin):
     change_list_template = 'admin/sale_summary_change_list.html'
-    date_hierarchy = 'created'
+    # date_hierarchy = 'created'
 
     def get_order_qs(self, request):
         today = datetime.date.today()
-        return Order.objects.filter(created__date=today)
+        # return Order.objects.filter(created__date=today)
+        return Order.objects.all()
 
     def get_spher_qs(self, request):
         orders = self.get_order_qs(request)
         return GlassDePres.objects.filter(order__in=orders).distinct()
 
-    def get_sales_data(self, request):
-        orders = self.get_order_qs(request)
-        spher_values = self.get_spher_qs(request)
-        type_de_verre_values = GlassType.objects.filter(depres_types_glass__order__in=orders).distinct()
+    # def get_sales_data(self, request):
+    #     orders = self.get_order_qs(request)
+    #     spher_values = self.get_spher_qs(request)
+    #     # depres = GlassDePres.objects.filter(order__in=orders).distinct()
 
-        sales_data = {}
+    #     sales_data = {}
 
-        for spher in spher_values:
-            spher_sales_data = {}
-            for type_de_verre in type_de_verre_values:
-                sales = GlassDePres.objects.filter(order__in=orders, spher=spher, type_de_verre=type_de_verre)
-                total_sales = sales.aggregate(total_sales=Sum('order__versement'))['total_sales'] or 0
-                spher_sales_data[type_de_verre.name] = total_sales
-            sales_data[spher] = spher_sales_data
-
-        return sales_data, spher_values, type_de_verre_values
+    #     for spher in spher_values:
+    #         spher_sales_data = {}
+    #         for type_de_verre in type_de_verre_values:
+    #             sales = GlassDePres.objects.filter(order__in=orders, spher=spher, type_de_verre=type_de_verre)
+    #             total_sales = sales.aggregate(total_sales=Sum('order__versement'))['total_sales'] or 0
+    #             spher_sales_data[type_de_verre.name] = total_sales
+    #         sales_data[spher] = spher_sales_data
+    #     return sales_data, spher_values, type_de_verre_values
     
     def changelist_view(self, request, extra_context=None):
-        sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
-
+        type_de_verre_values = self.get_spher_qs(request).values('type_de_verre__name', 'type_de_verre__id').annotate(tpcount=Count('type_de_verre')).order_by('type_de_verre')
+        print('type_de_verre_values', type_de_verre_values)
+        corrections = self.get_spher_qs(request).order_by('type_de_verre')
+        # sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
         context = {
-            'spher_values': spher_values,
             'type_de_verre_values': type_de_verre_values,
-            'sales_data': sales_data,
+            'corrections': corrections,
         }
-
         return super().changelist_view(request, extra_context=context)
 
 

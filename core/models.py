@@ -23,6 +23,8 @@ class GlassType(models.Model):
     name = models.CharField( max_length=150, blank=True, null=True)
     def __str__(self):
         return self.name
+    class Meta:
+        ordering = ("name",)
     
 class LentilType(models.Model):
     name = models.CharField( max_length=150, blank=True, null=True)
@@ -100,6 +102,10 @@ class Order(models.Model):
     def get_client_phone(self):
         return self.client.phone or "-"
 
+    def get_glass_types(self):
+        return self.depres_types_glass.all()
+    
+
 class SaleSummary(Order):
     class Meta:
         proxy = True
@@ -117,15 +123,20 @@ class GlassDePres(models.Model):
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     axe         = models.IntegerField()
-    type_de_verre       =  models.ForeignKey(GlassType, related_name="depres_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
-
+    type_de_verre =  models.ForeignKey(GlassType, related_name="depres_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
     note        = models.CharField( max_length=150, blank=True, null=True)
-
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated      = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
     @property
     def get_type_de_verre(self):
         return self.type_de_verre or "-"
+    @property
+    def get_display_report(self):
+        if self.spheric_glass:
+            return str(self.spher) 
+        else:
+            return str(self.cyl) + " " + str(self.spher) 
+
 class GlassDeLoin(models.Model):
     order        = models.ForeignKey(Order, related_name="de_loin_glasses", on_delete=models.CASCADE)
     eye_choice   = models.CharField(verbose_name="OEUIL",choices=EYE_CHOICES, max_length=2)

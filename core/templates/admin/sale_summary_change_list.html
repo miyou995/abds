@@ -14,22 +14,23 @@
     <table class="table">
       <thead>
         <tr>
-          <th>Spher</th>
-          {% for type_de_verre in type_de_verre_values %}
-            <th>{{ type_de_verre }}</th>
+          {% for tp in type_de_verre_values %}
+            <th>{{ tp.type_de_verre__name }}</th>
           {% endfor %}
         </tr>
       </thead>
       <tbody>
-        {% for spher in spher_values %}
+        {% for correction in corrections %}
           <tr>
-            <th>{{ spher }}</th>
-            {% for type_de_verre in type_de_verre_values %}
-                <td>{{ sales_data.spher.type_de_verre}}</td>
-                <td>0</td>
+            {% for tp in type_de_verre_values %}
+                <td> {% if correction.type_de_verre.id == tp.type_de_verre__id %}
+                        {{ correction.get_display_report}}
+                      {% else %}
+                      {% endif %} 
+                </td>
             {% endfor %}
           </tr>
-        {% endfor %}
+          {% endfor %}
       </tbody>
     </table>
   </div>
