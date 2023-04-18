@@ -159,7 +159,7 @@ class OrderAdmin(admin.ModelAdmin):
             return qs.none()
     save_on_top = True
         
-    list_display = ('id', 'client',  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
+    list_display = ('id', 'number','client',  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
     autocomplete_fields = ['client',]
     exclude = ('number',)
     list_display_links = ('id','client', )
@@ -194,23 +194,92 @@ class ClientAdmin(admin.ModelAdmin):
     inlines=[OrderInline]
 
 
-import datetime
+from datetime import datetime, date
 from django.db.models import Sum
 from django.db.models import Count
+from django.db.models import Q
+
+def get_next_in_date_hierarchy(request, date_hierarchy):
+    if date_hierarchy + '__day' in request.GET:
+        return 'hour'
+    if date_hierarchy + '__month' in request.GET:
+        return 'day'
+    if date_hierarchy + '__year' in request.GET:
+        return 'week'
+    return 'month'
+
 @admin.register(SaleSummary)
 class SaleSummaryAdmin(admin.ModelAdmin):
     change_list_template = 'admin/sale_summary_change_list.html'
-    # date_hierarchy = 'created'
+    date_hierarchy = 'date'
+    # def get_glass_type_qs(self, request):
+    #     glass_types = GlassType.objects.filter()
+
+
 
     def get_order_qs(self, request):
-        today = datetime.date.today()
-        # return Order.objects.filter(created__date=today)
-        return Order.objects.all()
+        # today = datetime.date.today()
+        today = datetime.now().date()
+        # print('todaytodaytodaytodaytodaytoday&&&&&', today)
+        print('Date ====>', datetime(2023, 4, 10).date())
+        day = request.GET.get('date__day')
+        month = request.GET.get('date__month')
+        year = request.GET.get('date__year')
+        try:
+            orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date())
+        except:
+            orders = Order.objects.none()
+        # pri11nt('orders=============>', orders)
+        return orders
+        # return Order.objects.all()
 
     def get_spher_qs(self, request):
+        # period = get_next_in_date_hierarchy(request, self.date_hierarchy)
+        print('============')
+        print('============')
+        print('============')
+        print('============', request.GET.get('date__day'))
+        print('request.GET', request.GET)
+        print('============')
+        print('============')
+        
         orders = self.get_order_qs(request)
-        return GlassDePres.objects.filter(order__in=orders).distinct()
+        de_pres = GlassDePres.objects.filter(order__in=orders).distinct()
+        de_loin = GlassDeLoin.objects.filter(order__in=orders).distinct()
+        progressif_de_loin = ProgressifDeLoin.objects.filter(order__in=orders).distinct()
+        progressif_de_depres = ProgressifDePres.objects.filter(order__in=orders).distinct()
+        qs = de_pres.union(de_loin, progressif_de_loin, progressif_de_depres)
 
+        # Filter GlassType objects based on related Glass objects
+        glass_types = GlassType.objects.filter(
+            Q(depres_types_glass__in=de_pres) |
+            Q(deloin_types_glass__in=de_loin) |
+            Q(progressif_deloin_types_glass__in=progressif_de_loin) |
+            Q(progressif_depres_types_glass__in=progressif_de_depres) 
+        ).distinct()
+        print('glass_types============================', glass_types)
+        return {"qs":qs, "glass_types":glass_types}
+
+    def changelist_view(self, request, extra_context=None):
+        print('self.get_spher_qs(request)[glass_types] ', self.get_spher_qs(request)["glass_types"])
+        # print('self.get_spher_qs(request).glass_types', self.get_spher_qs(request).glass_types)
+        
+        type_de_verre_values = self.get_spher_qs(request)["glass_types"].annotate(tpcount=Count('id')).order_by('name')
+        print('type_de_verre_values', type_de_verre_values)
+        corrections = self.get_spher_qs(request)["qs"].values("type_de_verre__id","cyl", "spher", "spheric_glass").order_by('type_de_verre')
+        print('corrections', corrections)
+        # sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
+        context = {
+            'type_de_verre_values': type_de_verre_values,
+            'corrections': corrections,
+        }
+        return super().changelist_view(request, extra_context=context)
+    
+
+
+
+
+    
     # def get_sales_data(self, request):
     #     orders = self.get_order_qs(request)
     #     spher_values = self.get_spher_qs(request)
@@ -227,16 +296,7 @@ class SaleSummaryAdmin(admin.ModelAdmin):
     #         sales_data[spher] = spher_sales_data
     #     return sales_data, spher_values, type_de_verre_values
     
-    def changelist_view(self, request, extra_context=None):
-        type_de_verre_values = self.get_spher_qs(request).values('type_de_verre__name', 'type_de_verre__id').annotate(tpcount=Count('type_de_verre')).order_by('type_de_verre')
-        print('type_de_verre_values', type_de_verre_values)
-        corrections = self.get_spher_qs(request).order_by('type_de_verre')
-        # sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
-        context = {
-            'type_de_verre_values': type_de_verre_values,
-            'corrections': corrections,
-        }
-        return super().changelist_view(request, extra_context=context)
+
 
 
 

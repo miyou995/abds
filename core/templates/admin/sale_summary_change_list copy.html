@@ -1,0 +1,42 @@
+{% extends "admin/change_list.html" %}
+{% load humanize %}
+
+{% block content_title %}
+    <h1> Verres du Jour </h1>
+{% endblock %}
+
+
+<!-- ... -->
+
+{% block result_list %}
+
+<div class="chart-container">
+  <table class="table">
+    <thead>
+      <tr>
+        {% for tp in type_de_verre_values %}
+          <th>{{ tp.type_de_verre__name }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for correction in corrections %}
+        <tr>
+          {% for tp in type_de_verre_values %}
+            <td>
+              {% if correction.type_de_verre.id == tp.type_de_verre__id %}
+                {{ correction.get_display_report }}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ... -->
+
+{% endblock %}
+
+{% block pagination %}{% endblock %}

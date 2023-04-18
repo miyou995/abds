@@ -62,7 +62,7 @@ class Order(models.Model):
     def __str__(self):
         return str(self.client)
     def save(self, *args, **kwargs):
-        self.number = 36
+        self.number = self.get_num_order()
         return super().save(*args, **kwargs)
 
     # @property
@@ -77,13 +77,17 @@ class Order(models.Model):
     #     result  = str(number).zfill(4)
 
     #     return int(result)
-    @property
-    def get_num_order():
+    def get_num_order(self):
         last_order = Order.objects.order_by('-created').first()
-        if last_order is None:
-            number = 1
+        print('last_order.id', last_order.id + 1)
+        if last_order.number:
+            number = int(last_order.number) + 1
+        elif not last_order.number:
+            number = last_order.id + 1
         else:
-            number = int(last_order.number[1:]) + 1
+            number = 1
+
+            
         invoice_number = f"{number:04d}"
         return int(invoice_number)
 
@@ -109,8 +113,8 @@ class Order(models.Model):
 class SaleSummary(Order):
     class Meta:
         proxy = True
-        verbose_name = 'Sale Summary'
-        verbose_name_plural = 'Sales Summary'
+        verbose_name = 'Verres du Jour'
+        verbose_name_plural = 'Verres du Jour'
 
 
 class GlassDePres(models.Model):
@@ -122,7 +126,7 @@ class GlassDePres(models.Model):
 
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
-    axe         = models.IntegerField()
+    axe         = models.IntegerField(default=0)
     type_de_verre =  models.ForeignKey(GlassType, related_name="depres_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
     note        = models.CharField( max_length=150, blank=True, null=True)
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
@@ -144,8 +148,8 @@ class GlassDeLoin(models.Model):
 
     spher        = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl          = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
-    axe          = models.IntegerField()
-    type_de_verre= models.ForeignKey(GlassType, verbose_name=" Type de verre", on_delete=models.CASCADE)
+    axe          = models.IntegerField(default=0)
+    type_de_verre= models.ForeignKey(GlassType, related_name="deloin_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
     addition     = models.DecimalField(verbose_name="Addition",max_digits=10, decimal_places=2, blank=True, null=True)
     note         = models.CharField( max_length=150, blank=True, null=True)
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
@@ -154,7 +158,12 @@ class GlassDeLoin(models.Model):
     @property
     def get_type_de_verre(self):
         return self.type_de_verre or "-"
-
+    @property
+    def get_display_report(self):
+        if self.spheric_glass:
+            return str(self.spher) 
+        else:
+            return str(self.cyl) + " " + str(self.spher) 
 class ProgressifDeLoin(models.Model):
     order      = models.ForeignKey(Order, related_name="de_loin_progressifs", on_delete=models.CASCADE)
     # progressif  = models.CharField(choices=PROGRESSIF_CHOICES, max_length=10 ,  blank=True, null=True)
@@ -163,8 +172,8 @@ class ProgressifDeLoin(models.Model):
 
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
-    axe         = models.IntegerField()
-    type_de_verre = models.ForeignKey(GlassType, verbose_name=" Type de verre", on_delete=models.CASCADE)
+    axe         = models.IntegerField(default=0)
+    type_de_verre = models.ForeignKey(GlassType, related_name="progressif_deloin_types_glass", verbose_name=" Type de verre", on_delete=models.CASCADE)
     addition    = models.DecimalField(verbose_name="Addition",max_digits=10, decimal_places=2)
     date        = models.DateField(verbose_name='Date de Traitement',auto_now=False, auto_now_add=False, blank=True, null=True)
     note        = models.CharField( max_length=150, blank=True, null=True)
@@ -174,7 +183,12 @@ class ProgressifDeLoin(models.Model):
     @property
     def get_type_de_verre(self):
         return self.type_de_verre or "-"
-    
+    @property
+    def get_display_report(self):
+        if self.spheric_glass:
+            return str(self.spher) 
+        else:
+            return str(self.cyl) + " " + str(self.spher) 
 class ProgressifDePres(models.Model):
     order      = models.ForeignKey(Order, related_name="de_pres_progressifs", on_delete=models.CASCADE)
     # progressif  = models.CharField(choices=PROGRESSIF_CHOICES, max_length=10 ,  blank=True, null=True)
@@ -183,17 +197,23 @@ class ProgressifDePres(models.Model):
 
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
-    axe         = models.IntegerField()
-    type_de_verre =  models.ForeignKey(GlassType, verbose_name=" Type de verre", on_delete=models.CASCADE, blank=True, null=True)
+    axe         = models.IntegerField(default=0)
+    type_de_verre =  models.ForeignKey(GlassType, related_name="progressif_depres_types_glass", verbose_name=" Type de verre", on_delete=models.CASCADE, blank=True, null=True)
     # date        = models.DateField(verbose_name='Date de Traitement',auto_now=False, auto_now_add=False, blank=True, null=True)
     note        = models.CharField( max_length=150, blank=True, null=True)
     created     = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated     = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
+
     @property
     def get_type_de_verre(self):
         return self.type_de_verre or "-"
 
-
+    @property
+    def get_display_report(self):
+        if self.spheric_glass:
+            return str(self.spher) 
+        else:
+            return str(self.cyl) + " " + str(self.spher) 
 
 class Lentil(models.Model):
     order      = models.ForeignKey(Order, related_name="lentilles", on_delete=models.CASCADE)
@@ -207,13 +227,18 @@ class Lentil(models.Model):
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     rayon         = models.DecimalField(verbose_name="rayon",max_digits=10, decimal_places=2)
     diametre         = models.DecimalField(verbose_name="diametre",max_digits=10, decimal_places=2)
-    axe         = models.IntegerField()
+    axe         = models.IntegerField(default=0)
     note        = models.CharField( max_length=150, blank=True, null=True)
 
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated      = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
 
-
+    @property
+    def get_display_report(self):
+        if self.spheric_glass:
+            return str(self.spher) 
+        else:
+            return str(self.cyl) + " " + str(self.spher) 
 
 class PhotoClient(models.Model):
     order = models.ForeignKey(Order, related_name="photos", on_delete=models.CASCADE)

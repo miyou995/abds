@@ -2,39 +2,51 @@
 {% load humanize %}
 
 {% block content_title %}
-    <h1> Sales Summary </h1>
+    <h1> Verres du Jour  </h1>
 {% endblock %}
 
 
-<!-- ... -->
+{% block extrahead %}
+    <style>
+      .container {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .row {
+        display: flex;
+        flex-direction: row;
+      }
+      
+      .col {
+        flex: 1;
+        padding: 8px;
+      }
+    </style>
+{% endblock %}
 
 {% block result_list %}
-
-<div class="chart-container">
-    <table class="table">
-      <thead>
-        <tr>
-          {% for tp in type_de_verre_values %}
-            <th>{{ tp.type_de_verre__name }}</th>
-          {% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for correction in corrections %}
-          <tr>
-            {% for tp in type_de_verre_values %}
-                <td> {% if correction.type_de_verre.id == tp.type_de_verre__id %}
-                        {{ correction.get_display_report}}
-                      {% else %}
-                      {% endif %} 
-                </td>
-            {% endfor %}
-          </tr>
-          {% endfor %}
-      </tbody>
-    </table>
+<div class="container">
+  <div class="row">
+    {% for tp in type_de_verre_values %}
+      <div class="col">
+       <h3> {{ tp.name }}</h3>
+          {% for correction in corrections %}
+          <div class="row">
+              {% if correction.type_de_verre__id == tp.id %}
+                {% if correction.spheric_glass %}
+                  <div class="col">{{ correction.spher }}</div>
+                {% else %}
+                  <div class="col">{{ correction.cyl }} {{ correction.spher }}</div>
+                {% endif %}
+              {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
   </div>
-
+ 
+</div>
 <!-- ... -->
 
 {% endblock %}
