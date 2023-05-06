@@ -216,7 +216,6 @@ class SaleSummaryAdmin(admin.ModelAdmin):
     #     glass_types = GlassType.objects.filter()
 
 
-
     def get_order_qs(self, request):
         # today = datetime.date.today()
         today = datetime.now().date()
@@ -244,29 +243,34 @@ class SaleSummaryAdmin(admin.ModelAdmin):
         print('============')
         
         orders = self.get_order_qs(request)
+
         de_pres = GlassDePres.objects.filter(order__in=orders).distinct()
         de_loin = GlassDeLoin.objects.filter(order__in=orders).distinct()
         progressif_de_loin = ProgressifDeLoin.objects.filter(order__in=orders).distinct()
         progressif_de_depres = ProgressifDePres.objects.filter(order__in=orders).distinct()
         qs = de_pres.union(de_loin, progressif_de_loin, progressif_de_depres)
-
+        print('THE DELOIN', de_loin)
         # Filter GlassType objects based on related Glass objects
+        # print('qs==================', qs)
         glass_types = GlassType.objects.filter(
             Q(depres_types_glass__in=de_pres) |
             Q(deloin_types_glass__in=de_loin) |
             Q(progressif_deloin_types_glass__in=progressif_de_loin) |
             Q(progressif_depres_types_glass__in=progressif_de_depres) 
         ).distinct()
+
+
         print('glass_types============================', glass_types)
         return {"qs":qs, "glass_types":glass_types}
 
     def changelist_view(self, request, extra_context=None):
-        print('self.get_spher_qs(request)[glass_types] ', self.get_spher_qs(request)["glass_types"])
+        # print('self.get_spher_qs(request)[glass_types] ', self.get_spher_qs(request)["qs"])
         # print('self.get_spher_qs(request).glass_types', self.get_spher_qs(request).glass_types)
         
         type_de_verre_values = self.get_spher_qs(request)["glass_types"].annotate(tpcount=Count('id')).order_by('name')
-        print('type_de_verre_values', type_de_verre_values)
-        corrections = self.get_spher_qs(request)["qs"].values("type_de_verre__id","cyl", "spher", "spheric_glass").order_by('type_de_verre')
+        print('self.qqqqqqqqqqqqqqqqqqqqqq"].values', self.get_spher_qs(request)["qs"].values())
+        corrections = self.get_spher_qs(request)["qs"].values().order_by('type_de_verre')
+        # corrections = self.get_spher_qs(request)["qs"].values("type_de_verre__id", "cyl", "spher", "spheric_glass").order_by('type_de_verre')
         print('corrections', corrections)
         # sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
         context = {

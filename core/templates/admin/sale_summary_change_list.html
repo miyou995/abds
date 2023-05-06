@@ -24,7 +24,6 @@
       }
     </style>
 {% endblock %}
-
 {% block result_list %}
 <div class="container">
   <div class="row">
@@ -33,7 +32,7 @@
        <h3> {{ tp.name }}</h3>
           {% for correction in corrections %}
           <div class="row">
-              {% if correction.type_de_verre__id == tp.id %}
+              {% if correction.type_de_verre_id == tp.id %}
                 {% if correction.spheric_glass %}
                   <div class="col">{{ correction.spher }}</div>
                 {% else %}
