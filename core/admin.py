@@ -153,7 +153,10 @@ class OrderAdmin(admin.ModelAdmin):
         return self.client.prenom
     get_prenom.short_description = 'Prénom'
     get_prenom.admin_order_field = 'client__prenom'
-
+    def get_magasin(self):
+        return self.client.magasin
+    get_magasin.short_description = 'Magasin'
+    get_magasin.admin_order_field = 'client__magasin'
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.magasin:
@@ -165,7 +168,7 @@ class OrderAdmin(admin.ModelAdmin):
         
     save_on_top = True
         
-    list_display = ('id', 'number','client', get_prenom,  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
+    list_display = ('id', 'number','client', get_prenom, get_magasin, 'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
     autocomplete_fields = ['client',]
     exclude = ('number',)
     list_display_links = ('id','client', )
