@@ -12,7 +12,6 @@
         display: flex;
         flex-direction: column;
       }
-      
       .row {
         display: flex;
         flex-direction: row;
@@ -26,6 +25,7 @@
 {% endblock %}
 {% block result_list %}
 <div class="container">
+  <h1>{% if request.user.is_superuser %}Blida{% else %}Bouira{% endif %}</h1>
   <div class="row">
     {% for tp in type_de_verre_values %}
       <div class="col">
@@ -44,7 +44,26 @@
       </div>
     {% endfor %}
   </div>
- 
+  {% comment %} <h1>Bouria</h1>
+  <div class="row">
+    {% for tp in type_de_verre_values %}
+      <div class="col">
+       <h3> {{ tp.name }}</h3>
+          {% for correction in corrections_bouira %}
+          <div class="row">
+              {% if correction.type_de_verre_id == tp.id %}
+                {% if correction.spheric_glass %}
+                  <div class="col">{{ correction.spher }}</div>
+                {% else %}
+                  <div class="col">{{ correction.cyl }} {{ correction.spher }}</div>
+                {% endif %}
+              {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div> {% endcomment %}
+  
 </div>
 <!-- ... -->
 

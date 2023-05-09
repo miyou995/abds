@@ -122,13 +122,13 @@ class ProgressifDePresInline(admin.TabularInline):
     verbose_name = "Vision De Pres (Progressif)"
     verbose_name_plural = "Vision De Pres (Progressif)"
 
-class GlassDePresAdmin(admin.ModelAdmin):
-    list_display = ('id','order', 'eye_choice', 'spheric_glass', 'spher', 'cyl', 'axe', )
-    list_display_links = ('id','order' )
-    search_fields = ('id', 'order', )
+# class GlassDePresAdmin(admin.ModelAdmin):
+#     list_display = ('id','order', 'eye_choice', 'spheric_glass', 'spher', 'cyl', 'axe', )
+#     list_display_links = ('id','order' )
+#     search_fields = ('id', 'order', )
 
-    list_per_page = 40
-    save_as = True
+#     list_per_page = 40
+#     save_as = True
 
     # inlines=[GlasstInline, ProgressifInline]
 # LentilType
@@ -149,6 +149,11 @@ class GlassTypeAdmin(admin.ModelAdmin):
     save_as = True
 
 class OrderAdmin(admin.ModelAdmin):
+    def get_prenom(self):
+        return self.client.prenom
+    get_prenom.short_description = 'Prénom'
+    get_prenom.admin_order_field = 'client__prenom'
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.magasin:
@@ -157,13 +162,14 @@ class OrderAdmin(admin.ModelAdmin):
             return qs
         else:
             return qs.none()
+        
     save_on_top = True
         
-    list_display = ('id', 'number','client',  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
+    list_display = ('id', 'number','client', get_prenom,  'date', 'total', 'rest', 'versement', 'paid','ordonnance_return',admin_pdf, order_pdf)
     autocomplete_fields = ['client',]
     exclude = ('number',)
     list_display_links = ('id','client', )
-    search_fields = ('id', 'client__name')
+    search_fields = ('id', 'client__name', 'client__prenom')
     list_filter = ('ordonnance_return', 'client__magasin','date','paid', HasReste, HasProgressif, HasLentilles)
     save_as = True
     inlines=[GlassDeLointInline, GlassDePrestInline,  ProgressifDeLoinInline, ProgressifDePresInline, LentiltInline, MenturetInline, PhotoClienttInline]
@@ -224,8 +230,14 @@ class SaleSummaryAdmin(admin.ModelAdmin):
         day = request.GET.get('date__day')
         month = request.GET.get('date__month')
         year = request.GET.get('date__year')
+        principale = Magasin.objects.filter(principale=True).first()
+        secondaire = Magasin.objects.filter(principale=False).first()
         try:
-            orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date())
+            if request.user.is_superuser:
+                print('I am super user')
+                orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date()).exclude(client__magasin=secondaire)
+            else:
+                orders = Order.objects.filter(client__magasin=request.user.magasin, date=datetime(int(year), int(month), int(day)).date())
         except:
             orders = Order.objects.none()
         # pri11nt('orders=============>', orders)
@@ -238,7 +250,7 @@ class SaleSummaryAdmin(admin.ModelAdmin):
         print('============')
         print('============')
         print('============', request.GET.get('date__day'))
-        print('request.GET', request.GET)
+        print('request.GET',  request.GET)
         print('============')
         print('============')
         
@@ -276,6 +288,7 @@ class SaleSummaryAdmin(admin.ModelAdmin):
         context = {
             'type_de_verre_values': type_de_verre_values,
             'corrections': corrections,
+            # 'corrections_bouira': corrections.filter(),
         }
         return super().changelist_view(request, extra_context=context)
     
@@ -334,6 +347,6 @@ admin.site.register(GlassType, GlassTypeAdmin)
 admin.site.register(LentilType, LentilTypeAdmin)
 
 
-admin.site.register(GlassDePres, GlassDePresAdmin)
+# admin.site.register(GlassDePres, GlassDePresAdmin)
 
 

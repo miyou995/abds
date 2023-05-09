@@ -59,12 +59,17 @@ class Order(models.Model):
     created             = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated             = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
     number              = models.IntegerField(blank=True, null=True)
+
     def __str__(self):
         return str(self.client)
+    
     def save(self, *args, **kwargs):
         self.number = self.get_num_order()
         return super().save(*args, **kwargs)
-
+    
+    @property
+    def prenom(self):
+        return str(self.client.prenom)
     # @property
     # def get_num_order(self):
     #     try:
