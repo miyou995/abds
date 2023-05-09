@@ -25,7 +25,7 @@
 {% endblock %}
 {% block result_list %}
 <div class="container">
-  <h1>{% if request.user.is_superuser %}Blida{% else %}Bouira{% endif %}</h1>
+  <h1 >{{magasin}}</h1>
   <div class="row">
     {% for tp in type_de_verre_values %}
       <div class="col">

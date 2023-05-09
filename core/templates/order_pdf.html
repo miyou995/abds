@@ -241,7 +241,7 @@
         </p>
     </section>
     <footer style="text-align:center">
-        <h2>N°: {{order.id}}</h2>
+        <h2>N°: {% if order.number %} {{order.number}} {% else %}{{order.id}} {% endif %}</h2>
     </footer>
 </body>
 

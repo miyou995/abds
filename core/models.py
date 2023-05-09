@@ -59,7 +59,8 @@ class Order(models.Model):
     created             = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated             = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
     number              = models.IntegerField(blank=True, null=True)
-
+    class Meta:
+        verbose_name= "Commande"
     def __str__(self):
         return str(self.client)
     
@@ -83,14 +84,16 @@ class Order(models.Model):
 
     #     return int(result)
     def get_num_order(self):
-        last_order = Order.objects.order_by('-created').first()
-        print('last_order.id', last_order.id + 1)
-        if last_order.number:
-            number = int(last_order.number) + 1
-        elif not last_order.number:
-            number = last_order.id + 1
-        else:
-            number = 1
+        magasin = self.client.magasin
+        last_order = Order.objects.filter(client__magasin=magasin).order_by('-created').first()
+        # print('last_order.id', last_order.id + 1)
+        number = 1
+        if last_order:
+            if last_order.number:
+                number = int(last_order.number) + 1
+            else:
+                number = last_order.id + 1
+        # return number
 
             
         invoice_number = f"{number:04d}"
@@ -121,6 +124,11 @@ class SaleSummary(Order):
         verbose_name = 'Verres du Jour'
         verbose_name_plural = 'Verres du Jour'
 
+class BouiraSaleSummary(Order):
+    class Meta:
+        proxy = True
+        verbose_name = 'Verres du Jour AB'
+        verbose_name_plural = 'Verres du Jour AB'
 
 class GlassDePres(models.Model):
     order      = models.ForeignKey(Order, verbose_name="de_pres_glasses", related_name='de_pres_glasses', on_delete=models.CASCADE)

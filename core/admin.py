@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GlassType, Client, GlassDePres, GlassDeLoin, ProgressifDeLoin, ProgressifDePres, Order, LentilType, Lentil, PhotoClient, Menture, SaleSummary
+from .models import GlassType, Client, GlassDePres, GlassDeLoin, ProgressifDeLoin, ProgressifDePres, Order, LentilType, Lentil, PhotoClient, Menture, SaleSummary, BouiraSaleSummary
 from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -214,36 +214,9 @@ def get_next_in_date_hierarchy(request, date_hierarchy):
         return 'week'
     return 'month'
 
-@admin.register(SaleSummary)
-class SaleSummaryAdmin(admin.ModelAdmin):
-    change_list_template = 'admin/sale_summary_change_list.html'
-    date_hierarchy = 'date'
-    # def get_glass_type_qs(self, request):
-    #     glass_types = GlassType.objects.filter()
 
-
-    def get_order_qs(self, request):
-        # today = datetime.date.today()
-        today = datetime.now().date()
-        # print('todaytodaytodaytodaytodaytoday&&&&&', today)
-        print('Date ====>', datetime(2023, 4, 10).date())
-        day = request.GET.get('date__day')
-        month = request.GET.get('date__month')
-        year = request.GET.get('date__year')
-        principale = Magasin.objects.filter(principale=True).first()
-        secondaire = Magasin.objects.filter(principale=False).first()
-        try:
-            if request.user.is_superuser:
-                print('I am super user')
-                orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date()).exclude(client__magasin=secondaire)
-            else:
-                orders = Order.objects.filter(client__magasin=request.user.magasin, date=datetime(int(year), int(month), int(day)).date())
-        except:
-            orders = Order.objects.none()
-        # pri11nt('orders=============>', orders)
-        return orders
-        # return Order.objects.all()
-
+class Sales:
+    
     def get_spher_qs(self, request):
         # period = get_next_in_date_hierarchy(request, self.date_hierarchy)
         print('============')
@@ -291,8 +264,71 @@ class SaleSummaryAdmin(admin.ModelAdmin):
             # 'corrections_bouira': corrections.filter(),
         }
         return super().changelist_view(request, extra_context=context)
-    
 
+
+@admin.register(SaleSummary)
+class SaleSummaryAdmin(Sales, admin.ModelAdmin ):
+
+    change_list_template = 'admin/sale_summary_change_list.html'
+    date_hierarchy = 'date'
+    # def get_glass_type_qs(self, request):
+    #     glass_types = GlassType.objects.filter()
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        magasin = Magasin.objects.filter(principale=True).first()
+        extra_context['magasin'] = magasin
+        return super(SaleSummaryAdmin, self).changelist_view(request, extra_context=extra_context)
+    
+    def get_order_qs(self, request):
+        # today = datetime.date.today()
+        today = datetime.now().date()
+        # print('todaytodaytodaytodaytodaytoday&&&&&', today)
+        print('Date ====>', datetime(2023, 4, 10).date())
+        day = request.GET.get('date__day')
+        month = request.GET.get('date__month')
+        year = request.GET.get('date__year')
+        magasin = Magasin.objects.filter(principale=True).first()
+        try:
+            if request.user.is_superuser:
+                orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date())
+            else:
+                orders = Order.objects.filter(client__magasin=magasin, date=datetime(int(year), int(month), int(day)).date())
+        except:
+            orders = Order.objects.none()
+        print('orders=============>', orders)
+        return orders
+        # return Order.objects.all()
+
+    
+@admin.register(BouiraSaleSummary)
+class BouiraSaleSummaryAdmin(Sales, admin.ModelAdmin):
+    change_list_template = 'admin/sale_summary_change_list.html'
+    date_hierarchy = 'date'
+    # def get_glass_type_qs(self, request):
+    #     glass_types = GlassType.objects.filter()
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        magasin = Magasin.objects.filter(principale=False).first()
+        extra_context['magasin'] = magasin
+        return super(BouiraSaleSummaryAdmin, self).changelist_view(request, extra_context=extra_context)
+    def get_order_qs(self, request):
+        # today = datetime.date.today()
+        today = datetime.now().date()
+        # print('todaytodaytodaytodaytodaytoday&&&&&', today)
+        print('Date ====>', datetime(2023, 4, 10).date())
+        day = request.GET.get('date__day')
+        month = request.GET.get('date__month')
+        year = request.GET.get('date__year')
+        magasin = Magasin.objects.filter(principale=False).first()
+        try:
+            orders = Order.objects.filter(client__magasin=magasin, date=datetime(int(year), int(month), int(day)).date())
+        except:
+
+            orders = Order.objects.none()
+        print('orders=============>', orders)
+        return orders
+        # return Order.objects.all()
 
 
 
