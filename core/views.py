@@ -17,8 +17,8 @@ def admin_order_pdf(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f"filename=order_{order.id}.pdf"
-    business = Business.objects.first()
-
+    # business = Business.objects.first()
+    business = order.client.magasin or  Business.objects.first()
     context = {
         "order": order, 
         "business": business,
