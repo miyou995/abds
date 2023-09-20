@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from .choices import CYL_CHOICES, SPHER_CHOICES
 # Create your models here.
+import auto_prefetch
 
 EYE_CHOICES = [
         ('OD', 'OD'),
@@ -33,7 +34,7 @@ class LentilType(models.Model):
 
 class Client(models.Model):
     name    = models.CharField( max_length=150)
-    magasin = models.ForeignKey("business.Magasin", verbose_name="Magasin", on_delete=models.CASCADE, blank=True, null=True)
+    magasin = auto_prefetch.ForeignKey("business.Magasin", verbose_name="Magasin", on_delete=models.CASCADE, blank=True, null=True)
     age     = models.IntegerField(blank=True, null=True)
     prenom  = models.CharField( max_length=150, blank=True, null=True)
     phone   = models.CharField( max_length=150, blank=True, null=True)
@@ -48,7 +49,7 @@ class Client(models.Model):
 
 
 class Order(models.Model):
-    client              = models.ForeignKey(Client, related_name="orders", on_delete=models.CASCADE)
+    client              = auto_prefetch.ForeignKey(Client, related_name="orders", on_delete=models.CASCADE)
     date                = models.DateField(auto_now=False, auto_now_add=False)
     total               = models.IntegerField()
     versement           = models.IntegerField()
@@ -131,7 +132,7 @@ class BouiraSaleSummary(Order):
         verbose_name_plural = 'Verres du Jour AB'
 
 class GlassDePres(models.Model):
-    order      = models.ForeignKey(Order, verbose_name="de_pres_glasses", related_name='de_pres_glasses', on_delete=models.CASCADE)
+    order      = auto_prefetch.ForeignKey(Order, verbose_name="de_pres_glasses", related_name='de_pres_glasses', on_delete=models.CASCADE)
     # vision  = models.CharField(verbose_name="vision", choices=PROGRESSIF_CHOICES, max_length=10 ,  blank=True, null=True)
 
     eye_choice  = models.CharField(verbose_name="OEUIL",choices=EYE_CHOICES, max_length=2)
@@ -140,7 +141,7 @@ class GlassDePres(models.Model):
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     axe         = models.IntegerField(default=0)
-    type_de_verre =  models.ForeignKey(GlassType, related_name="depres_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
+    type_de_verre =  auto_prefetch.ForeignKey(GlassType, related_name="depres_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
     note        = models.CharField( max_length=150, blank=True, null=True)
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
     updated      = models.DateTimeField(verbose_name='Date de dernière mise à jour', auto_now=True)
@@ -155,14 +156,14 @@ class GlassDePres(models.Model):
             return str(self.cyl) + " " + str(self.spher) 
 
 class GlassDeLoin(models.Model):
-    order        = models.ForeignKey(Order, related_name="de_loin_glasses", on_delete=models.CASCADE)
+    order        = auto_prefetch.ForeignKey(Order, related_name="de_loin_glasses", on_delete=models.CASCADE)
     eye_choice   = models.CharField(verbose_name="OEUIL",choices=EYE_CHOICES, max_length=2)
     spheric_glass   = models.BooleanField(verbose_name='Verre Spherique', default=False)
 
     spher        = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl          = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     axe          = models.IntegerField(default=0)
-    type_de_verre= models.ForeignKey(GlassType, related_name="deloin_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
+    type_de_verre= auto_prefetch.ForeignKey(GlassType, related_name="deloin_types_glass",verbose_name=" Type de verre", on_delete=models.CASCADE)
     addition     = models.DecimalField(verbose_name="Addition",max_digits=10, decimal_places=2, blank=True, null=True)
     note         = models.CharField( max_length=150, blank=True, null=True)
     created      = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
@@ -178,7 +179,7 @@ class GlassDeLoin(models.Model):
         else:
             return str(self.cyl) + " " + str(self.spher) 
 class ProgressifDeLoin(models.Model):
-    order      = models.ForeignKey(Order, related_name="de_loin_progressifs", on_delete=models.CASCADE)
+    order      = auto_prefetch.ForeignKey(Order, related_name="de_loin_progressifs", on_delete=models.CASCADE)
     # progressif  = models.CharField(choices=PROGRESSIF_CHOICES, max_length=10 ,  blank=True, null=True)
     eye_choice  = models.CharField(verbose_name="OEUIL",choices=EYE_CHOICES, max_length=2)
     spheric_glass   = models.BooleanField(verbose_name='Verre Spherique', default=False)
@@ -186,7 +187,7 @@ class ProgressifDeLoin(models.Model):
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     axe         = models.IntegerField(default=0)
-    type_de_verre = models.ForeignKey(GlassType, related_name="progressif_deloin_types_glass", verbose_name=" Type de verre", on_delete=models.CASCADE)
+    type_de_verre = auto_prefetch.ForeignKey(GlassType, related_name="progressif_deloin_types_glass", verbose_name=" Type de verre", on_delete=models.CASCADE)
     addition    = models.DecimalField(verbose_name="Addition",max_digits=10, decimal_places=2)
     date        = models.DateField(verbose_name='Date de Traitement',auto_now=False, auto_now_add=False, blank=True, null=True)
     note        = models.CharField( max_length=150, blank=True, null=True)
@@ -203,7 +204,7 @@ class ProgressifDeLoin(models.Model):
         else:
             return str(self.cyl) + " " + str(self.spher) 
 class ProgressifDePres(models.Model):
-    order      = models.ForeignKey(Order, related_name="de_pres_progressifs", on_delete=models.CASCADE)
+    order      = auto_prefetch.ForeignKey(Order, related_name="de_pres_progressifs", on_delete=models.CASCADE)
     # progressif  = models.CharField(choices=PROGRESSIF_CHOICES, max_length=10 ,  blank=True, null=True)
     eye_choice  = models.CharField(verbose_name="OEUIL",choices=EYE_CHOICES, max_length=2)
     spheric_glass   = models.BooleanField(verbose_name='Verre Spherique', default=False)
@@ -211,7 +212,7 @@ class ProgressifDePres(models.Model):
     spher       = models.CharField(choices=SPHER_CHOICES, max_length=10, default="PLAN")
     cyl         = models.CharField(choices=CYL_CHOICES, max_length=10 ,  default= "+ 0.00")
     axe         = models.IntegerField(default=0)
-    type_de_verre =  models.ForeignKey(GlassType, related_name="progressif_depres_types_glass", verbose_name=" Type de verre", on_delete=models.CASCADE, blank=True, null=True)
+    type_de_verre =  auto_prefetch.ForeignKey(GlassType, related_name="progressif_depres_types_glass", verbose_name=" Type de verre", on_delete=models.CASCADE, blank=True, null=True)
     # date        = models.DateField(verbose_name='Date de Traitement',auto_now=False, auto_now_add=False, blank=True, null=True)
     note        = models.CharField( max_length=150, blank=True, null=True)
     created     = models.DateTimeField(verbose_name='Date de Création', auto_now_add=True)
@@ -229,8 +230,8 @@ class ProgressifDePres(models.Model):
             return str(self.cyl) + " " + str(self.spher) 
 
 class Lentil(models.Model):
-    order      = models.ForeignKey(Order, related_name="lentilles", on_delete=models.CASCADE)
-    lentil_type = models.ForeignKey(LentilType, verbose_name="Type de lentille", on_delete=models.CASCADE)
+    order      = auto_prefetch.ForeignKey(Order, related_name="lentilles", on_delete=models.CASCADE)
+    lentil_type = auto_prefetch.ForeignKey(LentilType, verbose_name="Type de lentille", on_delete=models.CASCADE)
     brand  = models.CharField(verbose_name="Marque", max_length=150)
 
     eye_choice  = models.CharField(verbose_name="OEUIL", choices=EYE_CHOICES, max_length=2)
@@ -254,13 +255,13 @@ class Lentil(models.Model):
             return str(self.cyl) + " " + str(self.spher) 
 
 class PhotoClient(models.Model):
-    order = models.ForeignKey(Order, related_name="photos", on_delete=models.CASCADE)
+    order = auto_prefetch.ForeignKey(Order, related_name="photos", on_delete=models.CASCADE)
     fichier   = models.ImageField(upload_to='images/clients') 
     actif   = models.BooleanField(verbose_name='actif', default=True)
 
 
 class Menture(models.Model):
-    order      = models.ForeignKey(Order, verbose_name="Client", on_delete=models.CASCADE)
+    order      = auto_prefetch.ForeignKey(Order, verbose_name="Client", on_delete=models.CASCADE)
     matiere = models.CharField(verbose_name='Matiére',choices=MENTURE_CHOICES, max_length=15)
     name = models.CharField(verbose_name="Désignation",max_length=150, blank=True, null=True)
     price = models.DecimalField(verbose_name="Prix",max_digits=10, decimal_places=0)

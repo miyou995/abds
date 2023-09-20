@@ -23,7 +23,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('', RedirectView.as_view(url=reverse_lazy('admin:index'))),
     path('', include("core.urls")),
-
+    path("__debug__/", include("debug_toolbar.urls")),
     # path('', include("core.urls")),
 
 ]

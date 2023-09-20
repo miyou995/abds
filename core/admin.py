@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.contrib.admin import SimpleListFilter
 from business.models import Magasin
+from django.utils import timezone
 
 class HasReste(SimpleListFilter):
     title = "Reste" 
@@ -219,7 +220,32 @@ def get_next_in_date_hierarchy(request, date_hierarchy):
 
 
 class Sales:
-    
+
+
+    # def get_spher_qs(self, request):
+    #     orders = self.get_order_qs(request)
+
+    #     de_pres_ids = GlassDePres.objects.filter(order__in=orders)
+    #     de_loin_ids = GlassDeLoin.objects.filter(order__in=orders)
+    #     progressif_de_loin_ids = ProgressifDeLoin.objects.filter(order__in=orders)
+    #     progressif_de_depres_ids = ProgressifDePres.objects.filter(order__in=orders)
+
+    #     glass_types = GlassType.objects.filter(
+    #         Q(depres_types_glass__id__in=de_pres_ids) |
+    #         Q(deloin_types_glass__id__in=de_loin_ids) |
+    #         Q(progressif_deloin_types_glass__id__in=progressif_de_loin_ids) |
+    #         Q(progressif_depres_types_glass__id__in=progressif_de_depres_ids)
+    #     ).distinct()
+
+    #     return {"qs": glass_types, "glass_types": glass_types}
+
+
+
+
+
+
+
+
     def get_spher_qs(self, request):
         # period = get_next_in_date_hierarchy(request, self.date_hierarchy)
         print('============')
@@ -254,10 +280,10 @@ class Sales:
     def changelist_view(self, request, extra_context=None):
         # print('self.get_spher_qs(request)[glass_types] ', self.get_spher_qs(request)["qs"])
         # print('self.get_spher_qs(request).glass_types', self.get_spher_qs(request).glass_types)
-        
-        type_de_verre_values = self.get_spher_qs(request)["glass_types"].annotate(tpcount=Count('id')).order_by('name')
-        print('self.qqqqqqqqqqqqqqqqqqqqqq"].values', self.get_spher_qs(request)["qs"].values())
-        corrections = self.get_spher_qs(request)["qs"].values().order_by('type_de_verre')
+        spherqs = self.get_spher_qs(request)
+        type_de_verre_values = spherqs["glass_types"].annotate(tpcount=Count('id')).order_by('name')
+        # print('self.qqqqqqqqqqqqqqqqqqqqqq"].values', spherqs["qs"].values())
+        corrections = spherqs["qs"].values().order_by('type_de_verre')
         # corrections = self.get_spher_qs(request)["qs"].values("type_de_verre__id", "cyl", "spher", "spheric_glass").order_by('type_de_verre')
         print('corrections', corrections)
         # sales_data, spher_values, type_de_verre_values = self.get_sales_data(request)
@@ -294,9 +320,14 @@ class SaleSummaryAdmin(Sales, admin.ModelAdmin ):
         magasin = Magasin.objects.filter(principale=True).first()
         try:
             if request.user.is_superuser:
-                orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date())
+                orders = Order.objects.filter(date=datetime(int(year), int(month), int(day)).date()) \
+                .select_related('client') \
+                .prefetch_related('de_pres_glasses', 'de_loin_glasses', 'de_loin_progressifs', 'de_pres_progressifs', 'lentilles', 'photos')
+
             else:
-                orders = Order.objects.filter(client__magasin=magasin, date=datetime(int(year), int(month), int(day)).date())
+                orders = Order.objects.filter(client__magasin=magasin, date=datetime(int(year), int(month), int(day)).date()) \
+                .select_related('client') \
+                .prefetch_related('de_pres_glasses', 'de_loin_glasses', 'de_loin_progressifs', 'de_pres_progressifs', 'lentilles', 'photos')
         except:
             orders = Order.objects.none()
         print('orders=============>', orders)
